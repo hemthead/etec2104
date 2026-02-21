@@ -13,7 +13,7 @@ def build_order(team, side, symbol, price, qty):
 
 def submit_order(exchange_state, trader_state, order):
     # TODO: discard invalid?
-    trader_state["orders"].setdefault(order["symbol"], list()).append(order)
+    trader_state["orders"].setdefault(order["symbol"], list()).append(order.copy())
     trades = exchange.place_order(exchange_state, order)
 
     # ???
@@ -21,6 +21,9 @@ def submit_order(exchange_state, trader_state, order):
 
 
 def handle_fills(trader_state, trades):
+    # BUG #0 was due to trader_state's orders being the same orders from the
+    # global state, so they were already culled as necessary, I hate python and
+    # everything references...
     for trade in trades:
         trade_qty = trade["qty"]
         for order in trader_state["orders"][trade["symbol"]]:

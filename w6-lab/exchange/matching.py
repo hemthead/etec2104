@@ -12,17 +12,13 @@ def match_orders(state, symbol):
         if bid is None or ask is None:
             break
 
-        # print(bid, ask)
-
         trade, bid_rem, ask_rem = execute_trade(bid, ask)
-        # print(bid_rem, ask_rem)
 
         if trade is None:
             break
 
         trades.append(trade)
 
-        # NOTE: may have to set bid/ask rem
         remove_filled_orders(order_book)
 
     return trades  # trades
@@ -91,7 +87,6 @@ def remove_filled_orders(book):
         order_i = 0
         while order_i < len(book[side]):
             if book[side][order_i]["qty"] <= 0:
-                book[side].pop(order_i)
                 order_i -= 1
             order_i += 1
     pass
