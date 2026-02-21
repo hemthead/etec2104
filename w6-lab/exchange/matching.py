@@ -83,10 +83,10 @@ def execute_trade(bid, ask):
 
 def remove_filled_orders(book):
     for side in common.contracts.SIDES:
-        # iterate backward because pop
         order_i = 0
         while order_i < len(book[side]):
             if book[side][order_i]["qty"] <= 0:
+                book[side].pop(order_i)
                 order_i -= 1
             order_i += 1
     pass
