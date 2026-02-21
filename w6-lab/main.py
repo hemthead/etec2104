@@ -29,12 +29,11 @@ def run_simulation(num_ticks=50):
         # right, so I guess get_market_snapshot shouldn't return anything...?
         snapshot = exchange.get_market_snapshot(state)
         print_snapshot(snapshot)
-        # print(state["books"]["FROG"])
+
         order = strategy.decide_order(trader, snapshot)  # TODO: handle multiple orders
         trades = trader_client.submit_order(state, trader, order)
         print_trades(trades)
         trader_client.handle_fills(trader, trades)
-        # print(state["books"]["FROG"])
 
         input()
         # update PnL

@@ -1,4 +1,4 @@
-import common.contracts
+import common.contracts as contracts
 import exchange.matching as matching
 
 books = {}
@@ -32,7 +32,7 @@ def get_market_snapshot(state: dict[str, dict[str, dict]]):
 
     for symbol, order_book in state["books"].items():
         markets.setdefault(symbol, {})
-        for side in common.contracts.SIDES:
+        for side in contracts.SIDES:
             for order in order_book[side]:
                 key = str(float(order["price"]))
                 markets[symbol].setdefault(key, {"BUY": 0, "SELL": 0})[side] += order[
