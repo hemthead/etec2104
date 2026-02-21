@@ -1,0 +1,23 @@
+{
+    "last_prices": { "BEAR": null, "FROG": null, "LZRD": null},
+    "books": {
+        "BEAR": {
+            "BUY": [
+                {"team": "dima", "side": "BUY", "symbol": "BEAR", "price": 10, "qty": 10}
+            ],
+            "SELL": [
+                {"team": "dima", "side": "BUY", "symbol": "BEAR", "price": 10, "qty": 10}
+            ]
+        },
+        "FROG": {
+            "BUY": [], "SELL": []
+        },
+        "LZRD": {
+            "BUY": [], "SELL": []
+        }
+    },
+    "trade_log": []
+}
+
+// example trader
+// {"team": "dima", "side": "BUY", "symbol": "BEAR", "price": 10, "qty": 10}

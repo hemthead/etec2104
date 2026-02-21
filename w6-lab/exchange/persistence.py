@@ -1,9 +1,14 @@
+import json
+
+
 def save_exchange_state(state, filepath):
-    pass
+    with open(filepath, "w") as file:
+        json.dump(state, file, indent=2)
 
 
 def load_exchange_state(filepath):
-    return {}
+    with open(filepath, "r") as file:
+        return json.load(file)
 
 
 # states should only have
