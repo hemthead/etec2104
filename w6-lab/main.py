@@ -17,9 +17,7 @@ def run_simulation(num_ticks=50):
     except:
         state = exchange.create_exchange(symbols)
 
-    trader = trader_client.create_trader(
-        "dima", 1_000_000, {symbol: 1000 for symbol in contracts.SYMBOLS}
-    )
+    trader = trader_client.create_trader("dima", 1_000_000, 1000)
 
     for step in range(num_ticks):
         print(f"Simulation step {step}")
@@ -61,7 +59,11 @@ def print_traders(traders):
     for trader in traders:
         table.add_val(trader["team"])
         table.add_val(trader["cash"], ".2f")
-        table.add_val(json.dumps(trader["shares"]))
+        shares = {
+            symbol: trader["symbols"][symbol]["shares"]
+            for symbol in trader["symbols"].keys()
+        }
+        table.add_val(json.dumps(shares))
         table.add_val("TODO")
         table.finish_row()
 
