@@ -93,7 +93,7 @@ def print_trades(trades):
 
 
 def main():
-    run_simulation(num_ticks=7)
+    run_simulation()
 
 
 if __name__ == "__main__":
