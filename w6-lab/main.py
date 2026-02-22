@@ -1,3 +1,4 @@
+import json
 import random
 
 from common import contracts
@@ -30,15 +31,61 @@ def run_simulation(num_ticks=50):
         snapshot = exchange.get_market_snapshot(state)
         print_snapshot(snapshot)
 
-        order = strategy.decide_order(trader, snapshot)  # TODO: handle multiple orders
-        trades = trader_client.submit_order(state, trader, order)
+        orders = strategy.decide_order(trader, snapshot)  # TODO: handle multiple orders
+        print_orders(orders)
+
+        trades = []
+        for order in orders:
+            trades += trader_client.submit_order(state, trader, order)
         print_trades(trades)
         trader_client.handle_fills(trader, trades)
 
-        input()
+        snapshot = exchange.get_market_snapshot(state)
+        print_snapshot(snapshot)
+
+        # input()
         # update PnL
         # Log status
     print("Simulation finished")
+    print_traders([trader])
+
+
+def print_traders(traders):
+    table = Table("Traders")
+    table.add_val("Name")
+    table.add_val("Cash")
+    table.add_val("Shares")
+    table.add_val("Orders")
+    table.finish_row()
+
+    for trader in traders:
+        table.add_val(trader["team"])
+        table.add_val(trader["cash"], ".2f")
+        table.add_val(json.dumps(trader["shares"]))
+        table.add_val("TODO")
+        table.finish_row()
+
+    table.print()
+
+
+def print_orders(orders):
+    table = Table("Orders")
+    table.add_val("Team")
+    table.add_val("Side")
+    table.add_val("Symbol")
+    table.add_val("Quantity")
+    table.add_val("Price")
+    table.finish_row()
+
+    for order in orders:
+        table.add_val(order["team"])
+        table.add_val(order["side"])
+        table.add_val(order["symbol"])
+        table.add_val(order["qty"])
+        table.add_val(order["price"], ".2f")
+        table.finish_row()
+
+    table.print()
 
 
 def print_snapshot(market_snapshot):

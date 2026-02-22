@@ -1,4 +1,5 @@
 SYMBOLS = ["BEAR", "FROG", "LZRD"]
+# SYMBOLS = ["LZRD"]
 SIDES = ("BUY", "SELL")
 
 
