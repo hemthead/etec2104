@@ -8,7 +8,7 @@ from trader import strategy, trader_client
 
 
 def run_simulation(num_ticks=50):
-    random.seed(10)
+    random.seed(None)
 
     symbols = contracts.SYMBOLS
 
@@ -17,54 +17,73 @@ def run_simulation(num_ticks=50):
     except:
         state = exchange.create_exchange(symbols)
 
-    trader = trader_client.create_trader("dima", 1_000_000, 1000)
+    # trader = trader_client.create_trader("dima", 1_000_000, 1000)
+    traders = {}
+    for name in ("dima", "lalonde", "sparky"):
+        traders[name] = trader_client.create_trader(name, 1_000_000, 1000)
+        traders[name] = trader_client.create_trader(name, 0, 1000)
 
     for step in range(num_ticks):
         print(f"Simulation step {step}")
-        # periodically save state
-        if step % 1 == 0:
-            persistence.save_exchange_state(state, f"exchange-{step:02}.json")
 
         # right, so I guess get_market_snapshot shouldn't return anything...?
         snapshot = exchange.get_market_snapshot(state)
         print_snapshot(snapshot)
 
-        orders = strategy.decide_order(trader, snapshot)  # TODO: handle multiple orders
+        orders = []
+        for name, trader in traders.items():
+            orders += strategy.decide_order(trader, snapshot)
+
         print_orders(orders)
 
         trades = []
         for order in orders:
-            trades += trader_client.submit_order(state, trader, order)
+            trades += trader_client.submit_order(state, traders[order["team"]], order)
         print_trades(trades)
-        trader_client.handle_fills(trader, trades)
+
+        for trade in trades:
+            trader_client.handle_fills(traders[trade["buyer"]], [trade])
+            trader_client.handle_fills(traders[trade["seller"]], [trade])
 
         snapshot = exchange.get_market_snapshot(state)
         print_snapshot(snapshot)
+        # periodically save state
+        if step % 10 == 0:
+            persistence.save_exchange_state(state, f"exchange-{step:02}.json")
 
         # input()
         # update PnL
         # Log status
     print("Simulation finished")
-    print_traders([trader])
+    snapshot = exchange.get_market_snapshot(state)
+    print_snapshot(snapshot)
+    persistence.save_exchange_state(state, "exchange-final.json")
+    print_traders(traders, snapshot)
 
 
-def print_traders(traders):
+def print_traders(traders, market_snapshot):
     table = Table("Traders")
     table.add_val("Name")
     table.add_val("Cash")
+    table.add_val("PnL")
     table.add_val("Shares")
-    table.add_val("Orders")
+    table.add_val("Outstanding Orders (Pre-Paid)")
     table.finish_row()
 
-    for trader in traders:
-        table.add_val(trader["team"])
+    for name, trader in traders.items():
+        table.add_val(name)
         table.add_val(trader["cash"], ".2f")
+        table.add_val(trader_client.mark_to_market(trader, market_snapshot), ".2f")
         shares = {
             symbol: trader["symbols"][symbol]["shares"]
             for symbol in trader["symbols"].keys()
         }
         table.add_val(json.dumps(shares))
-        table.add_val("TODO")
+        orders = {
+            symbol: len(trader["symbols"][symbol]["orders"])
+            for symbol in trader["symbols"].keys()
+        }
+        table.add_val(json.dumps(orders))
         table.finish_row()
 
     table.print()

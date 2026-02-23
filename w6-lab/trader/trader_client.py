@@ -23,14 +23,17 @@ def submit_order(exchange_state, trader_state, order):
 
     # assuming order["team"] refers to trader_state
 
-    trader_state["cash"] -= order["price"] * order["qty"]
+    if order["team"] != trader_state["team"]:
+        return None
 
     if order["side"] == "SELL":
         trader_state["symbols"][order["symbol"]]["shares"] -= order["qty"]
+    else:
+        trader_state["cash"] -= order["price"] * order["qty"]
 
-    trader_state["symbols"].setdefault(
-        order["symbol"], {"shares": 0, "orders": [order.copy()]}
-    )
+    trader_state["symbols"].setdefault(order["symbol"], {"shares": 0, "orders": []})[
+        "orders"
+    ].append(order.copy())
     trades = exchange.place_order(exchange_state, order)
 
     # ???
@@ -43,11 +46,11 @@ def handle_fills(trader_state, trades):
     # everything references...
     for trade in trades:
         cash_diff = trade["qty"] * trade["price"]
-        if trade["buyer"] == trader_state["team"]:
-            cash_diff = -cash_diff
-            trader_state["symbols"][trade["symbol"]]["shares"] += trade["qty"]
 
-        trader_state["cash"] += cash_diff
+        if trade["seller"] == trader_state["team"]:
+            trader_state["cash"] += cash_diff
+        elif trade["buyer"] == trader_state["team"]:
+            trader_state["symbols"][trade["symbol"]]["shares"] += trade["qty"]
 
         trade_qty = trade["qty"]
         for order in trader_state["symbols"][trade["symbol"]]["orders"]:
@@ -55,6 +58,9 @@ def handle_fills(trader_state, trades):
                 qty = min(trade_qty, order["qty"])
                 trade_qty -= qty
                 order["qty"] -= qty
+
+                if order["qty"] <= 0:
+                    trader_state["symbols"][trade["symbol"]]["orders"].remove(order)
 
 
 def mark_to_market(trader_state, market_snapshot):
@@ -65,13 +71,18 @@ def mark_to_market(trader_state, market_snapshot):
     last_prices = market_snapshot["last_prices"]
     for symbol in last_prices.keys():
         qty_in = 0
-        orders = trader_state["orders"][symbol]
+        orders = trader_state["symbols"][symbol]["orders"]
+        last_price = last_prices[symbol]
+        if last_price is None:
+            last_price = 1
 
         for order in orders:
-            qty_in += order["qty"]
-            money_in += order["price"] * order["qty"]
+            if order["side"] == "BUY":
+                money_in += order["price"] * order["qty"]
+            else:
+                qty_in += order["qty"]
 
-        money_out += qty_in * last_prices[symbol]
+        money_out += qty_in * last_price
 
     # sure, that sounds right enough
     return money_out - money_in

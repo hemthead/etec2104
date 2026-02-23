@@ -5,16 +5,6 @@ from common import contracts
 
 def decide_order(trader_state, market_snapshot) -> list:
     return random_liquity(trader_state, market_snapshot)
-
-    return [
-        common.contracts.make_order(
-            trader_state["team"],
-            common.contracts.sides[0],
-            common.contracts.symbols[0],
-            10,
-            10,
-        )
-    ]
     return []  # order
 
 
@@ -46,21 +36,23 @@ def mean_reversion(trader_state, market_snapshot):
     # price going down, and sell the opposite
 
 
-def random_liquity(trader_state, market_snapshot: dict[str, dict[str, float]]):
+def random_liquity(
+    trader_state, market_snapshot: dict[str, dict[str, float]], num_orders=1
+):
+    # just pick a range of numbers and buy/sell
+    # to simply test your logic.
     orders = []
 
-    for i in range(5):
+    for i in range(num_orders):
         symbol = random.choice(contracts.SYMBOLS)
         side = random.choice(contracts.SIDES)
 
         last_price = market_snapshot["last_prices"][symbol]
         if last_price is None:
-            last_price = 0
-
-        print(symbol, last_price)
+            last_price = 5
 
         price_offset = (random.random() - 0.5) * 3
-        price_offset = random.randint(-3, 3)
+        price_offset = random.randint(-30, 30) / 10
         price = max(1.0, last_price + price_offset)
         qty = random.randint(1, 50)
 
@@ -74,6 +66,3 @@ def random_liquity(trader_state, market_snapshot: dict[str, dict[str, float]]):
         orders.append(order)
 
     return orders
-    pass
-    # just pick a range of numbers and buy/sell
-    # to simply test your logic.
